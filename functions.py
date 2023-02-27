@@ -1,4 +1,4 @@
-import time
+from time import sleep
 
 import key
 from binance.client import Client
@@ -11,6 +11,7 @@ from binance.enums import *
 client =  Client(key.key, key.secretKey)
 
 symbol = 'BTCUSDT'
+pause = 1
 
 def main():
     price = client.get_ticker(symbol=symbol)['lastPrice']
@@ -21,6 +22,14 @@ def main():
     #order_buy(quantity)
 
     balance()
+
+    margin_info = client.get_margin_account()
+    print('Margin info:')
+    assets = margin_info['userAssets']
+    for asset in assets:
+        if asset['asset'] == 'USDT':
+            print('Свободных маржинальных USDT: ', asset['free'])
+    #print(assets)
 
     trades()
     """def op_or():
@@ -38,6 +47,7 @@ def main():
     orders()
 
     bids_price()
+    asks_price()
     """
     order = client.get_margin_order(
     symbol=symbol,
@@ -76,6 +86,19 @@ def balance():
     BNB_balance = client.get_asset_balance(asset='BNB')
     print('BNB balance: ', BNB_balance['free'])
 
+def USDT_balance():
+    USDT_balance = client.get_asset_balance(asset='USDT')
+    return USDT_balance
+
+
+def USDT_margin_balance():
+    margin_info = client.get_margin_account()
+    assets = margin_info['userAssets']
+    for asset in assets:
+        if asset['asset'] == 'USDT':
+            #print('Свободных маржинальных USDT: ', asset['free'])
+            return asset['free']
+
 
 def trades():
     trades = client.get_my_trades(symbol=symbol)
@@ -84,8 +107,11 @@ def trades():
 
 def orders():
     orders = client.get_open_orders()
+    print('Открытые спотовые ордеры: ')
     print(orders)   #Все открытые ордера
     #print(orders[0]['orderId']) 
+
+    print('Открытые маржинальные ордеры: ')
     orders = client.get_open_margin_orders(symbol=symbol)
     print(orders) #Все открытые маржинальные ордеры
 
@@ -98,10 +124,20 @@ def bids_price():
     max_amount = bids_df['Amount'].max()
     #print(max_amount)
     max_bids = bids_df[bids_df['Amount']==max_amount] #Находим строку с наибольшим колличеством symbol для покупки
-    print(max_bids)
+    #print(max_bids)
     bids_price = max_bids['Price'].values[0] #Выбираем из строки цену
-    print('Price: ', bids_price)
+    print('Bids Price: ', bids_price)
     return bids_price
+
+def asks_price():       #Как bids_price, но для ордеров на продажу
+    depth = client.get_order_book(symbol = symbol)
+    asks_df = pd.DataFrame(depth['asks'])
+    asks_df.columns = ['Price', 'Amount']
+    max_amount = asks_df['Amount'].max()
+    max_asks = asks_df[asks_df['Amount']==max_amount]
+    asks_price = max_asks['Price'].values[0]
+    print('Asks Price: ', asks_price)
+    return asks_price
 
 
 def order_buy(quantity, price):
@@ -110,6 +146,7 @@ def order_buy(quantity, price):
         quantity=quantity,
         price=price)  #Размещение спотового лимитного ордера на покупку
     order_ID = order['orderId']
+    return order_ID
     
 
 def order_sell(quantity, price):
@@ -119,6 +156,7 @@ def order_sell(quantity, price):
         price=price)  #Размещение спотового лимитного ордера на продажу
     
     order_ID = order['orderId']
+    return order_ID
     
 
 def order_margin_buy(quantity, price):
@@ -131,9 +169,10 @@ def order_margin_buy(quantity, price):
     price=price)  #Размещение маржинального лимитного ордера на покупку
 
     order_ID = order['orderId']
+    return order_ID
 
 
-def order_margin_buy(quantity, price):
+def order_margin_sell(quantity, price):
     order = client.create_margin_order(
     symbol=symbol,
     side=SIDE_SELL,
@@ -143,6 +182,7 @@ def order_margin_buy(quantity, price):
     price=price)  #Размещение маржинального лимитного ордера на продажу
 
     order_ID = order['orderId']
+    return order_ID
 
 
 def check_spot(orderId):
@@ -151,6 +191,12 @@ def check_spot(orderId):
     orderId=orderId)  #Узнаем статус спотового ордера
 
     status = order['status']
+    if status != 'FILLED':
+        sleep(pause)
+        check_spot(orderId)
+    elif status == 'FILLED':
+        return 'ok'
+
 
 
 def check_marg(orderId):
@@ -159,7 +205,11 @@ def check_marg(orderId):
     orderId=orderId)  #Узнаем статус маржинального ордера
 
     status = order['status']
-
+    if status != 'FILLED':
+        sleep(pause)
+        check_marg(orderId)
+    elif status == 'FILLED':
+        return 'ok'
 
 ### Main ###
 
