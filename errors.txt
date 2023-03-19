@@ -1,0 +1,5 @@
+binance.exceptions.BinanceAPIException: APIError(code=-1002): You are not authorized to execute this request.
+
+binance.exceptions.BinanceAPIException: APIError(code=-1013): Filter failure: MIN_NOTIONAL - ошибка минимальной суммы ордера, сумма увеличина до 10,5
+
+UnboundLocalError: local variable 'sell_price' referenced before assignment

@@ -3,6 +3,7 @@ from time import sleep
 from binance.client import Client
 import pandas as pd
 from binance.enums import *
+from termcolor import colored, cprint
 
 import key
 import functions as f
@@ -16,7 +17,7 @@ def main():
 
     cash = f.USDT_margin_balance()
     if cash < 10:
-        print('Недостаточно средств!')
+        cprint('Недостаточно средств!', 'white', 'on_red')
     else:
 
         quantity = f.all_tickers()
@@ -26,11 +27,16 @@ def main():
         id_buy = f.order_margin_buy(quantity, buy_price)
 
         buy_status = f.check_marg(id_buy)
-        while buy_status != 'ok':
+        
+        q = 0
+        while (buy_status != 'ok') and (q != 3):
             sleep(pause)
             sleep(pause)
+            print('Cycle: ', q)
+            q += 1
             buy_status = f.check_marg(id_buy)
-
+            
+            
         if buy_status == 'ok':
             sell_price = f.asks_price()
 
@@ -48,10 +54,34 @@ def main():
                     sell_status = f.check_marg(id_sell)
 
                 if sell_status == 'ok':
-                    print('WIN!!!')
+                    cprint('WIN!!!', 'white', 'on_green')
 
                     main()
-                    
+        elif buy_status == 'not ok':
+            cansel = f.cansel_marg_order(id_buy)
+            if cansel == 'ok':
+                #print('Cansel order. Price:', buy_price, ', Id:', id_buy )
+                print(colored('Cansel order. Price:', 'white', 'on_red'), colored(buy_price, 'white', 'on_red'), colored(', Id:', 'white', 'on_red'), colored(id_buy, 'white', 'on_red') )
+                main()
+
+            elif cansel == 'error':
+                sell_price = f.asks_price()
+
+            while sell_price < buy_price:
+                sleep(pause)
+                sell_price = f.asks_price()
+            
+            if sell_price > buy_price:
+                id_sell = f.order_margin_sell(quantity, sell_price)
+
+                sell_status = f.check_marg(id_sell)
+                while sell_status != 'ok':
+                    sleep(pause)
+                    sleep(pause)
+                    sell_status = f.check_marg(id_sell)
+
+                if sell_status == 'ok':
+                    cprint('WIN!!!', 'white', 'on_green')
         
 
 

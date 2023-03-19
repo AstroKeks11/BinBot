@@ -2,10 +2,12 @@ from time import sleep
 
 import key
 from binance.client import Client
+from binance.exceptions import BinanceAPIException
 import pandas as pd
 from binance.enums import *
 #from binance import AsyncClient
 #import asyncio
+from termcolor import colored, cprint
 
 
 client =  Client(key.key, key.secretKey)
@@ -55,6 +57,40 @@ def main():
     print(order['status'])
     """
 
+    def order_test():
+        order = client.create_margin_order(
+            symbol=symbol,
+            side=SIDE_BUY,
+            type=ORDER_TYPE_LIMIT,
+            timeInForce=TIME_IN_FORCE_GTC,
+            quantity=0.0005,
+            price='21000')  
+
+        print(order)
+
+        if order['fills'] == []:
+            print('Ничего нет')
+        return order['orderId']
+
+    orderId = order_test()
+
+    def check_test(orderId):
+        order = client.get_margin_order(
+        symbol=symbol,
+        orderId=orderId)  #Узнаем статус маржинального ордера
+
+        print(order)
+
+    check_test(orderId)
+
+    def cansel_test(orderId):
+        result = client.cancel_margin_order(
+            symbol=symbol,
+            orderId=orderId)
+        
+    cansel_test(orderId)
+    print('cansel')
+
     print('ok')
     i = input('Введите что-то:  ')
     print(i)
@@ -71,7 +107,7 @@ def all_tickers():
 
     print('BTC: ', ticker_df.loc[symbol]['price'])
 
-    quantity = round((10.1/float(ticker_df.loc[symbol]['price'])), 5)
+    quantity = round((10.5/float(ticker_df.loc[symbol]['price'])), 5)
     print('quantity: ', quantity)
     return quantity
 
@@ -88,7 +124,7 @@ def balance():
 
 def USDT_balance():
     USDT_balance = client.get_asset_balance(asset='USDT')
-    return USDT_balance
+    return float(USDT_balance)
 
 
 def USDT_margin_balance():
@@ -97,7 +133,7 @@ def USDT_margin_balance():
     for asset in assets:
         if asset['asset'] == 'USDT':
             #print('Свободных маржинальных USDT: ', asset['free'])
-            return asset['free']
+            return float(asset['free'])
 
 
 def trades():
@@ -206,10 +242,41 @@ def check_marg(orderId):
 
     status = order['status']
     if status != 'FILLED':
-        sleep(pause)
-        check_marg(orderId)
+        return 'not ok'
     elif status == 'FILLED':
         return 'ok'
+""" 
+def check_marg_buy_cansel(orderId):
+    order = client.get_margin_order(
+    symbol=symbol,
+    orderId=orderId)  #Узнаем статус маржинального ордера
+
+    if order['status'] == 'FILLED':
+        return 'ok'
+    elif (order['status'] != 'FILLED') and (order['executedQty'] == '0'):
+        sleep(pause)
+        order = client.get_margin_order(
+        symbol=symbol,
+        orderId=orderId)
+
+        if order['status'] == 'FILLED':
+            return 'ok'
+        else:
+            result = client.cancel_margin_order(
+                symbol=symbol,
+                orderId=orderId)
+"""        
+def cansel_marg_order(orderId):
+    try:
+        result = client.cancel_margin_order(
+            symbol=symbol,
+            orderId=orderId)
+        return 'ok'
+    except BinanceAPIException: 
+        #print('error')
+        cprint('ERROR', 'white', 'on_red')
+        return 'error'
+        
 
 ### Main ###
 
