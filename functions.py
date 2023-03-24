@@ -107,7 +107,7 @@ def all_tickers():
 
     print('BTC: ', ticker_df.loc[symbol]['price'])
 
-    quantity = round((10.5/float(ticker_df.loc[symbol]['price'])), 5)
+    quantity = round((15/float(ticker_df.loc[symbol]['price'])), 5)
     print('quantity: ', quantity)
     return quantity
 
@@ -173,7 +173,10 @@ def asks_price():       #Как bids_price, но для ордеров на пр
     max_asks = asks_df[asks_df['Amount']==max_amount]
     asks_price = max_asks['Price'].values[0]
     print('Asks Price: ', asks_price)
-    return asks_price
+    pr = (float(asks_price)/100)*0.15
+    asks_price = round((float(asks_price) + pr),2)
+    print(str(asks_price))
+    return str(asks_price)
 
 
 def order_buy(quantity, price):

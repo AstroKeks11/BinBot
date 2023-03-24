@@ -4,6 +4,7 @@ from binance.client import Client
 import pandas as pd
 from binance.enums import *
 from termcolor import colored, cprint
+import redis
 
 import key
 import functions as f
@@ -13,11 +14,14 @@ client =  Client(key.key, key.secretKey)
 symbol = 'BTCUSDT'
 pause = 1
 
+redis_client = redis.Redis()
+
 def main():
 
     cash = f.USDT_margin_balance()
     if cash < 10:
         cprint('Недостаточно средств!', 'white', 'on_red')
+        redis_client.set('Low_balance', 'low balance')
     else:
 
         quantity = f.all_tickers()
@@ -55,13 +59,14 @@ def main():
 
                 if sell_status == 'ok':
                     cprint('WIN!!!', 'white', 'on_green')
-
+                    redis_client.set('confirmed '+ str(sell_price), buy_price)
                     main()
         elif buy_status == 'not ok':
             cansel = f.cansel_marg_order(id_buy)
             if cansel == 'ok':
                 #print('Cansel order. Price:', buy_price, ', Id:', id_buy )
                 print(colored('Cansel order. Price:', 'white', 'on_red'), colored(buy_price, 'white', 'on_red'), colored(', Id:', 'white', 'on_red'), colored(id_buy, 'white', 'on_red') )
+                redis_client.set('cansel '+ str(id_buy), buy_price)
                 main()
 
             elif cansel == 'error':
@@ -82,8 +87,9 @@ def main():
 
                 if sell_status == 'ok':
                     cprint('WIN!!!', 'white', 'on_green')
-        
-
+                    redis_client.set('confirmed '+ str(sell_price), buy_price)
 
 if __name__ == '__main__':
     main()
+
+redis_client.close()

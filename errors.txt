@@ -3,3 +3,9 @@ binance.exceptions.BinanceAPIException: APIError(code=-1002): You are not author
 binance.exceptions.BinanceAPIException: APIError(code=-1013): Filter failure: MIN_NOTIONAL - ошибка минимальной суммы ордера, сумма увеличина до 10,5
 
 UnboundLocalError: local variable 'sell_price' referenced before assignment
+
+requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+
+binance.exceptions.BinanceAPIException: APIError(code=-1021): Timestamp for this request was 1000ms ahead of the server's time.
+
+requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.binance.com', port=443): Read timed out. (read timeout=10)
