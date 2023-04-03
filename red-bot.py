@@ -26,7 +26,8 @@ def main():
     confirmed_new = 0
     canseled_new = 0
 
-    p = subprocess.Popen(['python', 'margin-process.py'])
+    #p = subprocess.Popen(['python', 'margin-process.py'])
+    p = subprocess.Popen(['python', 'spot-process.py'])
 
     q = 0
 

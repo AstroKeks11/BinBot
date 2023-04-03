@@ -107,7 +107,7 @@ def all_tickers():
 
     print('BTC: ', ticker_df.loc[symbol]['price'])
 
-    quantity = round((15/float(ticker_df.loc[symbol]['price'])), 5)
+    quantity = round((10.5/float(ticker_df.loc[symbol]['price'])), 5)
     print('quantity: ', quantity)
     return quantity
 
@@ -124,7 +124,8 @@ def balance():
 
 def USDT_balance():
     USDT_balance = client.get_asset_balance(asset='USDT')
-    return float(USDT_balance)
+    #return float(USDT_balance)
+    return float(USDT_balance['free'])
 
 
 def USDT_margin_balance():
@@ -280,6 +281,15 @@ def cansel_marg_order(orderId):
         cprint('ERROR', 'white', 'on_red')
         return 'error'
         
+def cansei_spot_order(orderID):
+    try:
+        result = client.cancel_order(
+            symbol=symbol,
+            orderId=orderID)
+        return 'ok'
+    except BinanceAPIException:
+        cprint('ERROR', 'white', 'on_red')
+        return 'error'
 
 ### Main ###
 
